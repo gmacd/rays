@@ -2,21 +2,20 @@ package geom
 
 import (
 	"gmacd/core"
-	"gmacd/maths"
 	"math"
 )
 
 type Primitive interface {
-	Intersects(ray maths.Ray, maxDist float64) (result int, dist float64)
-	Normal(v maths.Vec3) maths.Vec3
+	Intersects(ray core.Ray, maxDist float64) (result int, dist float64)
+	Normal(v core.Vec3) core.Vec3
 	Material() *Material
 	IsLight() bool
 	SetIsLight(isLight bool)
-	LightCentre() maths.Vec3
+	LightCentre() core.Vec3
 }
 
 type Sphere struct {
-	Centre maths.Vec3
+	Centre core.Vec3
 	Radius float64
 	// TODO remove?  Premature?  Simplify?
 	RadiusSq    float64
@@ -26,12 +25,12 @@ type Sphere struct {
 	material *Material
 }
 
-func NewSphere(centre maths.Vec3, radius float64) *Sphere {
+func NewSphere(centre core.Vec3, radius float64) *Sphere {
 	material := NewMaterialBlank()
 	return &Sphere{centre, radius, radius * radius, 1.0 / radius, false, material}
 }
 
-func (sphere *Sphere) Intersects(ray maths.Ray, maxDist float64) (result int, dist float64) {
+func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
 	v := ray.Origin.Sub(sphere.Centre)
 	b := -v.DotProduct(ray.Dir)
 	det := b*b - v.Length() + sphere.RadiusSq
@@ -43,12 +42,16 @@ func (sphere *Sphere) Intersects(ray maths.Ray, maxDist float64) (result int, di
 		if i2 > 0 {
 			i1 := b - det
 
+			//fmt.Printf("i1=%v, i2=%v\n", i1, i2)
+
 			if i1 < 0 {
 				if i2 < maxDist {
+					//fmt.Println("HIT_FROM_INSIDE")
 					return core.HIT_FROM_INSIDE, i2
 				}
 			} else {
 				if i1 < maxDist {
+					//fmt.Println("HIT")
 					return core.HIT, i1
 				}
 			}
@@ -65,7 +68,7 @@ func (sphere *Sphere) SetIsLight(isLight bool) {
 	sphere.isLight = isLight
 }
 
-func (sphere *Sphere) Normal(v maths.Vec3) maths.Vec3 {
+func (sphere *Sphere) Normal(v core.Vec3) core.Vec3 {
 	return v.Sub(sphere.Centre).MulScalar(sphere.RadiusRecip)
 }
 
@@ -73,22 +76,22 @@ func (sphere *Sphere) Material() *Material {
 	return sphere.material
 }
 
-func (sphere *Sphere) LightCentre() maths.Vec3 {
+func (sphere *Sphere) LightCentre() core.Vec3 {
 	return sphere.Centre
 }
 
 type Plane struct {
-	Plane    maths.Plane
+	Plane    core.Plane
 	material *Material
 }
 
-func NewPlane(normal maths.Vec3, d float64) *Plane {
-	p := maths.NewPlane(normal, d)
+func NewPlane(normal core.Vec3, d float64) *Plane {
+	p := core.NewPlane(normal, d)
 	material := NewMaterialBlank()
 	return &Plane{*p, material}
 }
 
-func (plane *Plane) Intersects(ray maths.Ray, maxDist float64) (result int, dist float64) {
+func (plane *Plane) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
 	d := plane.Plane.Normal.DotProduct(ray.Dir)
 	if d == 0 {
 		return core.MISS, 0.0
@@ -108,11 +111,11 @@ func (plane *Plane) IsLight() bool {
 
 func (plane *Plane) SetIsLight(isLight bool) {}
 
-func (plane *Plane) LightCentre() maths.Vec3 {
-	return maths.NewVec3Zero()
+func (plane *Plane) LightCentre() core.Vec3 {
+	return core.NewVec3Zero()
 }
 
-func (plane *Plane) Normal(v maths.Vec3) maths.Vec3 {
+func (plane *Plane) Normal(v core.Vec3) core.Vec3 {
 	return plane.Plane.Normal
 }
 
@@ -121,19 +124,19 @@ func (plane *Plane) Material() *Material {
 }
 
 type Material struct {
-	Colour     maths.ColourRGB
+	Colour     core.ColourRGB
 	Reflection float64
 	Diffuse    float64
 }
 
 func NewMaterialBlank() *Material {
-	return &Material{maths.NewColourRGB(0.0, 0.0, 0.0), 0.0, 0.0}
+	return &Material{core.NewColourRGB(0.0, 0.0, 0.0), 0.0, 0.0}
 }
 
-func NewMaterial(colour maths.ColourRGB, reflection, diffuse float64) *Material {
+func NewMaterial(colour core.ColourRGB, reflection, diffuse float64) *Material {
 	return &Material{colour, reflection, diffuse}
 }
 
-func (m *Material) Specular() float64 {
+func (m Material) Specular() float64 {
 	return 1.0 - m.Diffuse
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gmacd/core"
 	"gmacd/geom"
-	"gmacd/maths"
 	"image"
 	"image/color"
 	"image/png"
@@ -43,7 +42,7 @@ func (canvas *Canvas) SetPixelRGB(x, y int, r, g, b uint8) {
 //	canvas.img.Set(x, y, color.NRGBA{uint8(r * 255), uint8(g * 255), uint8(b * 255), 255})
 //}
 
-func (canvas *Canvas) SetPixel(x, y int, c maths.ColourRGB) {
+func (canvas *Canvas) SetPixel(x, y int, c core.ColourRGB) {
 	canvas.img.Set(x, y, color.NRGBA{uint8(c.R * 255), uint8(c.G * 255), uint8(c.B * 255), 255})
 }
 
@@ -65,12 +64,12 @@ func (canvas *Canvas) Export() error {
 
 const MAX_TRACE_DEPTH = 6
 
-func FindNearestIntersection(scene *Scene, ray maths.Ray) (prim geom.Primitive, result int, dist float64) {
+func FindNearestIntersection(scene *Scene, ray core.Ray) (prim geom.Primitive, result int, dist float64) {
 	dist = 1000000.0
 
 	// Find nearest intersection
 	for _, p := range scene.primitives {
-		if pResult, pDist := p.Intersects(ray, dist); result != core.MISS {
+		if pResult, pDist := p.Intersects(ray, dist); pResult != core.MISS {
 			prim = p
 			result = pResult
 			dist = pDist
@@ -80,7 +79,7 @@ func FindNearestIntersection(scene *Scene, ray maths.Ray) (prim geom.Primitive, 
 	return prim, result, dist
 }
 
-func Raytrace(scene *Scene, ray maths.Ray, acc *maths.ColourRGB, depth int, rIndex float64) (nearestPrim *geom.Primitive, dist float64) {
+func Raytrace(scene *Scene, ray core.Ray, acc *core.ColourRGB, depth int, rIndex float64) (nearestPrim *geom.Primitive, dist float64) {
 	if depth > MAX_TRACE_DEPTH {
 		return nil, 0.0
 	}
@@ -100,7 +99,7 @@ func Raytrace(scene *Scene, ray maths.Ray, acc *maths.ColourRGB, depth int, rInd
 
 	// Trace lights
 	for _, light := range scene.primitives {
-		if !(light.IsLight()) {
+		if !light.IsLight() {
 			continue
 		}
 
@@ -128,15 +127,15 @@ func render(canvas *Canvas) {
 	dx := (wx2 - wx1) / float64(canvas.width)
 	dy := (wy2 - wy1) / float64(canvas.height)
 
-	o := maths.NewVec3(0, 0, -5)
+	o := core.NewVec3(0, 0, -5)
 
 	for y := 0; y < canvas.height; y++ {
 		sx = wx1
 
 		for x := 0; x < canvas.width; x++ {
-			acc := maths.NewColourRGB(0, 0, 0)
-			dir := maths.NewVec3(sx, sy, 0).Sub(o).Normal()
-			ray := maths.NewRay(o, dir)
+			acc := core.NewColourRGB(0, 0, 0)
+			dir := core.NewVec3(sx, sy, 0).Sub(o).Normal()
+			ray := core.NewRay(o, dir)
 
 			Raytrace(scene, ray, &acc, 1, 1.0)
 			acc.R = math.Min(acc.R, 1.0)
@@ -168,29 +167,29 @@ func (s *Scene) AddPrimitive(p geom.Primitive) {
 func CreateScene() *Scene {
 	scene := NewScene()
 
-	plane := geom.NewPlane(maths.NewVec3(0.0, 1.0, 0.0), 4.4)
+	plane := geom.NewPlane(core.NewVec3(0.0, 1.0, 0.0), 4.4)
 	plane.Material().Reflection = 0.0
 	plane.Material().Diffuse = 1.0
 	plane.Material().Colour.Set(0.4, 0.3, 0.3)
 	scene.AddPrimitive(plane)
 
-	sphere := geom.NewSphere(maths.NewVec3(1.0, -0.8, 3.0), 2.5)
+	sphere := geom.NewSphere(core.NewVec3(1.0, -0.8, 3.0), 2.5)
 	sphere.Material().Reflection = 0.6
 	sphere.Material().Colour.Set(0.7, 0.7, 0.7)
 	scene.AddPrimitive(sphere)
 
-	sphere = geom.NewSphere(maths.NewVec3(-5.5, -0.5, 7.0), 2)
+	sphere = geom.NewSphere(core.NewVec3(-5.5, -0.5, 7.0), 2)
 	sphere.Material().Reflection = 1.0
 	sphere.Material().Diffuse = 0.1
 	sphere.Material().Colour.Set(0.7, 0.7, 1.0)
 	scene.AddPrimitive(sphere)
 
-	sphere = geom.NewSphere(maths.NewVec3(0.0, 5.0, 5.0), 0.1)
+	sphere = geom.NewSphere(core.NewVec3(0.0, 5.0, 5.0), 0.1)
 	sphere.SetIsLight(true)
 	sphere.Material().Colour.Set(0.6, 0.6, 0.6)
 	scene.AddPrimitive(sphere)
 
-	sphere = geom.NewSphere(maths.NewVec3(2.0, 5.0, 1.0), 0.1)
+	sphere = geom.NewSphere(core.NewVec3(2.0, 5.0, 1.0), 0.1)
 	sphere.SetIsLight(true)
 	sphere.Material().Colour.Set(0.7, 0.7, 0.9)
 	scene.AddPrimitive(sphere)
