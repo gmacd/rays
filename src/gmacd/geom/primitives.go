@@ -130,7 +130,7 @@ type Material struct {
 }
 
 func NewMaterialBlank() *Material {
-	return &Material{core.NewColourRGB(0.0, 0.0, 0.0), 0.0, 0.0}
+	return &Material{core.NewColourRGB(0.2, 0.2, 0.2), 0.0, 0.2}
 }
 
 func NewMaterial(colour core.ColourRGB, reflection, diffuse float64) *Material {

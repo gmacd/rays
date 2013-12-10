@@ -79,19 +79,19 @@ func FindNearestIntersection(scene *Scene, ray core.Ray) (prim geom.Primitive, r
 	return prim, result, dist
 }
 
-func Raytrace(scene *Scene, ray core.Ray, acc *core.ColourRGB, depth int, rIndex float64) (nearestPrim *geom.Primitive, dist float64) {
+func Raytrace(scene *Scene, ray core.Ray, acc *core.ColourRGB, depth int, rIndex float64) (prim geom.Primitive, dist float64) {
 	if depth > MAX_TRACE_DEPTH {
 		return nil, 0.0
 	}
 
-	prim, _, dist := FindNearestIntersection(scene, ray)
-	if nearestPrim == nil {
+	prim, _, dist = FindNearestIntersection(scene, ray)
+	if prim == nil {
 		return nil, 0
 	}
 
 	if prim.IsLight() {
 		acc.Set(1.0, 1.0, 1.0)
-		return &prim, dist
+		return prim, dist
 	}
 
 	// Determine intersection point
@@ -115,7 +115,7 @@ func Raytrace(scene *Scene, ray core.Ray, acc *core.ColourRGB, depth int, rIndex
 		}
 	}
 
-	return &prim, dist
+	return prim, dist
 }
 
 func render(canvas *Canvas) {
