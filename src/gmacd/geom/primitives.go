@@ -12,6 +12,8 @@ type Primitive interface {
 	IsLight() bool
 	SetIsLight(isLight bool)
 	LightCentre() core.Vec3
+	Name() string
+	SetName(name string)
 }
 
 type Sphere struct {
@@ -23,17 +25,18 @@ type Sphere struct {
 	// TODO this seems wrong...
 	isLight  bool
 	material *Material
+	name     string
 }
 
 func NewSphere(centre core.Vec3, radius float64) *Sphere {
 	material := NewMaterialBlank()
-	return &Sphere{centre, radius, radius * radius, 1.0 / radius, false, material}
+	return &Sphere{centre, radius, radius * radius, 1.0 / radius, false, material, ""}
 }
 
 func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
 	v := ray.Origin.Sub(sphere.Centre)
 	b := -v.DotProduct(ray.Dir)
-	det := b*b - v.Length() + sphere.RadiusSq
+	det := b*b - v.DotProduct(v) + sphere.RadiusSq
 
 	if det > 0 {
 		det = math.Sqrt(det)
@@ -42,16 +45,12 @@ func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) (result int, dis
 		if i2 > 0 {
 			i1 := b - det
 
-			//fmt.Printf("i1=%v, i2=%v\n", i1, i2)
-
 			if i1 < 0 {
 				if i2 < maxDist {
-					//fmt.Println("HIT_FROM_INSIDE")
 					return core.HIT_FROM_INSIDE, i2
 				}
 			} else {
 				if i1 < maxDist {
-					//fmt.Println("HIT")
 					return core.HIT, i1
 				}
 			}
@@ -80,15 +79,24 @@ func (sphere *Sphere) LightCentre() core.Vec3 {
 	return sphere.Centre
 }
 
+func (sphere *Sphere) Name() string {
+	return sphere.name
+}
+
+func (sphere *Sphere) SetName(name string) {
+	sphere.name = name
+}
+
 type Plane struct {
 	Plane    core.Plane
 	material *Material
+	name     string
 }
 
 func NewPlane(normal core.Vec3, d float64) *Plane {
 	p := core.NewPlane(normal, d)
 	material := NewMaterialBlank()
-	return &Plane{*p, material}
+	return &Plane{*p, material, ""}
 }
 
 func (plane *Plane) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
@@ -121,6 +129,14 @@ func (plane *Plane) Normal(v core.Vec3) core.Vec3 {
 
 func (plane *Plane) Material() *Material {
 	return plane.material
+}
+
+func (plane *Plane) Name() string {
+	return plane.name
+}
+
+func (plane *Plane) SetName(name string) {
+	plane.name = name
 }
 
 type Material struct {
