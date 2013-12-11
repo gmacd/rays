@@ -3,6 +3,7 @@ package raytracer
 import (
 	"gmacd/core"
 	"gmacd/geom"
+	"math"
 )
 
 const MAX_TRACE_DEPTH = 6
@@ -47,6 +48,8 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, depth int, r
 			continue
 		}
 
+		shade := 1.0
+
 		// Calculate diffuse shading
 		l := light.LightCentre().Sub(intersectionPoint).Normal()
 		n := prim.Normal(intersectionPoint)
@@ -56,6 +59,16 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, depth int, r
 				diff := dot * prim.Material().Diffuse
 				acc.AddTo(prim.Material().Colour.MulScalar(diff).Mul(light.Material().Colour))
 			}
+		}
+
+		// Specular
+		specular := prim.Material().Specular()
+		v := ray.Dir
+		r := l.Sub(n.MulScalar(2.0 * l.DotProduct(n)))
+		dot := v.DotProduct(r)
+		if dot > 0 {
+			specular := math.Pow(dot, 20) * specular * shade
+			acc.AddTo(light.Material().Colour.MulScalar(specular))
 		}
 	}
 
