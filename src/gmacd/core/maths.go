@@ -1,5 +1,7 @@
 package core
 
+const EPSILON = 0.0001
+
 type Ray struct {
 	Origin Vec3
 	Dir    Vec3

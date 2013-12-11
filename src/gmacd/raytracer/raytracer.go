@@ -59,5 +59,20 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, depth int, r
 		}
 	}
 
+	// Calculate reflection
+	reflection := prim.Material().Reflection
+	if reflection > 0 {
+		n := prim.Normal(intersectionPoint)
+		r := ray.Dir.Sub(n.MulScalar(2.0 * ray.Dir.DotProduct(n)))
+		if depth < MAX_TRACE_DEPTH {
+			reflectionRay := core.NewRay(
+				intersectionPoint.Add(r.MulScalar(core.EPSILON)), r)
+			reflectionColour := core.NewColourRGB(0, 0, 0)
+
+			Raytrace(scene, reflectionRay, &reflectionColour, depth+1, rIndex)
+			acc.AddTo(prim.Material().Colour.Mul(reflectionColour).MulScalar(reflection))
+		}
+	}
+
 	return prim, dist
 }

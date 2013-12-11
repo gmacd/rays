@@ -24,6 +24,14 @@ func (v1 Vec3) Sub(v2 Vec3) Vec3 {
 	return NewVec3(v1.X-v2.X, v1.Y-v2.Y, v1.Z-v2.Z)
 }
 
+func (v1 Vec3) Mul(v2 Vec3) Vec3 {
+	return NewVec3(v1.X*v2.X, v1.Y*v2.Y, v1.Z*v2.Z)
+}
+
+func (v1 Vec3) Div(v2 Vec3) Vec3 {
+	return NewVec3(v1.X/v2.X, v1.Y/v2.Y, v1.Z/v2.Z)
+}
+
 func (v1 Vec3) MulScalar(s float64) Vec3 {
 	return NewVec3(v1.X*s, v1.Y*s, v1.Z*s)
 }
