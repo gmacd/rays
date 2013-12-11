@@ -9,28 +9,35 @@ type Primitive interface {
 	Intersects(ray core.Ray, maxDist float64) (result int, dist float64)
 	Normal(v core.Vec3) core.Vec3
 	Material() *Material
+	Name() string
+	SetName(name string)
+
+	Light
+}
+
+type Light interface {
 	IsLight() bool
 	SetIsLight(isLight bool)
 	LightCentre() core.Vec3
-	Name() string
-	SetName(name string)
 }
 
 type Sphere struct {
+	material *Material
+	name     string
+
 	Centre core.Vec3
 	Radius float64
 	// TODO remove?  Premature?  Simplify?
 	RadiusSq    float64
 	RadiusRecip float64
+
 	// TODO this seems wrong...
-	isLight  bool
-	material *Material
-	name     string
+	isLight bool
 }
 
 func NewSphere(centre core.Vec3, radius float64) *Sphere {
 	material := NewMaterialBlank()
-	return &Sphere{centre, radius, radius * radius, 1.0 / radius, false, material, ""}
+	return &Sphere{material, "", centre, radius, radius * radius, 1.0 / radius, false}
 }
 
 func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
@@ -88,15 +95,16 @@ func (sphere *Sphere) SetName(name string) {
 }
 
 type Plane struct {
-	Plane    core.Plane
 	material *Material
 	name     string
+
+	Plane core.Plane
 }
 
 func NewPlane(normal core.Vec3, d float64) *Plane {
 	p := core.NewPlane(normal, d)
 	material := NewMaterialBlank()
-	return &Plane{*p, material, ""}
+	return &Plane{material, "", *p}
 }
 
 func (plane *Plane) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
