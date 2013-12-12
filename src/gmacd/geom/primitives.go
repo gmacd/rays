@@ -32,6 +32,7 @@ type Sphere struct {
 	RadiusRecip float64
 
 	// TODO this seems wrong...
+	// TODO embed struct?
 	isLight bool
 }
 

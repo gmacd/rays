@@ -48,16 +48,30 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, depth int, r
 			continue
 		}
 
+		// Point light shadows
 		shade := 1.0
+		// TODO is point light?
+		l, lightDist := light.LightCentre().Sub(intersectionPoint).NormalWithLength()
+		{
+			// If point light
+			r := core.NewRay(intersectionPoint.Add(l.MulScalar(core.EPSILON)), l)
+			for _, primForShadow := range scene.Primitives {
+				if primForShadow != light {
+					if result, _ := primForShadow.Intersects(r, lightDist); result != core.MISS {
+						shade = 0
+						break
+					}
+				}
+			}
+		}
 
 		// Calculate diffuse shading
-		l := light.LightCentre().Sub(intersectionPoint).Normal()
 		n := prim.Normal(intersectionPoint)
 		if prim.Material().Diffuse > 0 {
 			dot := n.DotProduct(l)
 			if dot > 0 {
-				diff := dot * prim.Material().Diffuse
-				acc.AddTo(prim.Material().Colour.MulScalar(diff).Mul(light.Material().Colour))
+				diffuse := dot * prim.Material().Diffuse * shade
+				acc.AddTo(prim.Material().Colour.MulScalar(diffuse).Mul(light.Material().Colour))
 			}
 		}
 

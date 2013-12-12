@@ -36,6 +36,10 @@ func (v1 Vec3) MulScalar(s float64) Vec3 {
 	return NewVec3(v1.X*s, v1.Y*s, v1.Z*s)
 }
 
+func (v1 Vec3) DivScalar(s float64) Vec3 {
+	return NewVec3(v1.X/s, v1.Y/s, v1.Z/s)
+}
+
 func (v Vec3) Length() float64 {
 	return math.Sqrt(v.X*v.X + v.Y*v.Y + v.Z*v.Z)
 }
@@ -43,6 +47,11 @@ func (v Vec3) Length() float64 {
 func (v Vec3) Normal() Vec3 {
 	l := v.Length()
 	return NewVec3(v.X/l, v.Y/l, v.Z/l)
+}
+
+func (v Vec3) NormalWithLength() (normal Vec3, originalLength float64) {
+	l := v.Length()
+	return NewVec3(v.X/l, v.Y/l, v.Z/l), l
 }
 
 func (v1 Vec3) DotProduct(v2 Vec3) float64 {
