@@ -5,6 +5,8 @@ import (
 	"math"
 )
 
+// TODO Primitive store ref to shape and material
+// TODO Light details as part of material
 type Primitive interface {
 	Intersects(ray core.Ray, maxDist float64) (result int, dist float64)
 	Normal(v core.Vec3) core.Vec3

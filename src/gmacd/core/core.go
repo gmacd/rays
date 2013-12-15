@@ -1,7 +1,7 @@
 package core
 
 const (
-	MISS = iota
-	HIT
-	HIT_FROM_INSIDE
+	HIT_FROM_INSIDE = -1
+	MISS            = 0
+	HIT             = 1
 )

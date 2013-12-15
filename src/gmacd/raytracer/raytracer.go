@@ -29,7 +29,8 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, depth int, r
 		return nil, 0.0
 	}
 
-	prim, _, dist = FindNearestIntersection(scene, ray)
+	intersectionResult := core.MISS
+	prim, intersectionResult, dist = FindNearestIntersection(scene, ray)
 	if prim == nil {
 		return nil, 0
 	}
@@ -98,6 +99,32 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, depth int, r
 
 			Raytrace(scene, reflectionRay, &reflectionColour, depth+1, rIndex)
 			acc.AddTo(prim.Material().Colour.Mul(reflectionColour).MulScalar(reflection))
+		}
+	}
+
+	// Refraction
+	refraction := prim.Material().Refraction
+	if refraction > 0 && depth < MAX_TRACE_DEPTH {
+		primRIndex := prim.Material().RefractiveIndex
+		n := rIndex / primRIndex
+		N := prim.Normal(intersectionPoint).MulScalar(float64(intersectionResult))
+		cosI := -N.DotProduct(ray.Dir)
+		cosT2 := 1.0 - n*n*(1.0-cosI*cosI)
+		if cosT2 > 0 {
+			T := ray.Dir.MulScalar(n).Add(N.MulScalar(n*cosI - math.Sqrt(cosT2)))
+			refractiveColour := core.NewColourRGB(0, 0, 0)
+			refractiveRay := core.NewRay(
+				intersectionPoint.Add(T.MulScalar(core.EPSILON)),
+				T)
+			_, refractiveDist := Raytrace(scene, refractiveRay, &refractiveColour, depth+1, primRIndex)
+
+			absorbance := prim.Material().Colour.MulScalar(0.15 * -refractiveDist)
+			transparency := core.NewColourRGB(
+				math.Exp(absorbance.R),
+				math.Exp(absorbance.G),
+				math.Exp(absorbance.B))
+
+			acc.AddTo(refractiveColour.Mul(transparency))
 		}
 	}
 
