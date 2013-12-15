@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	canvas := core.NewCanvas(800, 600)
+	canvas := core.NewCanvas(640, 480)
 
 	sceneStartTime := time.Now()
 	scene := testscenes.CreateFlipcode3Scene()

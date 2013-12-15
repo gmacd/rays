@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"fmt"
 	"gmacd/core"
 	"gmacd/geom"
 	"gmacd/raytracer"
@@ -8,40 +9,97 @@ import (
 	"runtime"
 )
 
+const (
+	chunkSizeX int = 16
+	chunkSizeY int = 16
+)
+
+type Camera struct {
+	wx1, wy1 float64
+	wx2, wy2 float64
+	dx, dy   float64
+	origin   core.Vec3
+}
+
+func NewCamera(wx1, wy1, wx2, wy2 float64, canvasWidth, canvasHeight int, origin core.Vec3) *Camera {
+	dx := (wx2 - wx1) / float64(canvasWidth)
+	dy := (wy2 - wy1) / float64(canvasHeight)
+	return &Camera{wx1, wy1, wx2, wy2, dx, dy, origin}
+}
+
+func (camera *Camera) ScreenToWorld(x, y int) core.Vec3 {
+	return core.NewVec3(
+		camera.wx1+float64(x)*camera.dx,
+		camera.wy1+float64(y)*camera.dy,
+		0)
+}
+
 func Render(scene *geom.Scene, canvas *core.Canvas) {
-	runtime.GOMAXPROCS(8)
+	fmt.Printf("Rendering with %v CPUs.\n", runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	// init render
-	wx1, wx2, wy1, wy2 := -4.0, 4.0, 3.0, -3.0
-	sx, sy := 0.0, wy1
-	dx := (wx2 - wx1) / float64(canvas.Width)
-	dy := (wy2 - wy1) / float64(canvas.Height)
+	camera := NewCamera(-4, 3, 4, -3, canvas.Width, canvas.Height, core.NewVec3(0, 0, -5))
 
-	o := core.NewVec3(0, 0, -5)
+	numXChunks := canvas.Width / chunkSizeX
+	numYChunks := canvas.Height / chunkSizeY
+	remainderChunkSizeX := canvas.Width - numXChunks*chunkSizeX
+	remainderChunkSizeY := canvas.Height - numYChunks*chunkSizeY
 
-	numRays := canvas.Height
-	c := make(chan int, numRays)
+	numGoRoutinesSpawned := 0
+	c := make(chan int, (numXChunks+1)*(numYChunks+1))
 
-	for y := 0; y < canvas.Height; y++ {
-		sx = wx1
-
-		go func(sx1, sy1 float64, y1 int) {
-			for x := 0; x < canvas.Width; x++ {
-				dir := core.NewVec3(sx1, sy1, 0).Sub(o).Normal()
-				ray := core.NewRay(o, dir)
-
-				raytrace(scene, ray, canvas, x, y1, c)
-
-				sx1 += dx
-			}
-			c <- 1
-		}(sx, sy, y)
-		sy += dy
+	for chunkY := 0; chunkY < numYChunks; chunkY++ {
+		startY := chunkY * chunkSizeY
+		endY := startY + chunkSizeY
+		for chunkX := 0; chunkX < numXChunks; chunkX++ {
+			go renderChunk(
+				scene, camera, canvas, c,
+				chunkX*chunkSizeX, startY,
+				(chunkX+1)*chunkSizeX, endY)
+			numGoRoutinesSpawned++
+		}
+		if remainderChunkSizeX > 0 {
+			go renderChunk(
+				scene, camera, canvas, c,
+				numXChunks*chunkSizeX, startY,
+				canvas.Width, endY)
+			numGoRoutinesSpawned++
+		}
+	}
+	if remainderChunkSizeY > 0 {
+		startY := numYChunks * chunkSizeY
+		endY := canvas.Height
+		for chunkX := 0; chunkX < numXChunks; chunkX++ {
+			go renderChunk(
+				scene, camera, canvas, c,
+				chunkX*chunkSizeX, startY,
+				(chunkX+1)*chunkSizeX, endY)
+			numGoRoutinesSpawned++
+		}
+		if remainderChunkSizeX > 0 {
+			go renderChunk(
+				scene, camera, canvas, c,
+				numXChunks*chunkSizeX, startY,
+				canvas.Width, endY)
+			numGoRoutinesSpawned++
+		}
 	}
 
-	for i := 0; i < numRays; i++ {
+	for i := 0; i < numGoRoutinesSpawned; i++ {
 		<-c
 	}
+}
+
+func renderChunk(scene *geom.Scene, camera *Camera, canvas *core.Canvas, c chan int, x1, y1, x2, y2 int) {
+	for y := y1; y < y2; y++ {
+		for x := x1; x < x2; x++ {
+			dir := camera.ScreenToWorld(x, y).Sub(camera.origin).Normal()
+			ray := core.NewRay(camera.origin, dir)
+
+			raytrace(scene, ray, canvas, x, y, c)
+		}
+	}
+	c <- 1
 }
 
 func raytrace(scene *geom.Scene, ray core.Ray, canvas *core.Canvas, x, y int, c chan int) {
