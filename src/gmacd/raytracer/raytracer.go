@@ -76,7 +76,7 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, depth int, r
 		}
 
 		// Specular
-		specular := prim.Material().Specular()
+		specular := prim.Material().Specular
 		v := ray.Dir
 		r := l.Sub(n.MulScalar(2.0 * l.DotProduct(n)))
 		dot := v.DotProduct(r)

@@ -10,7 +10,7 @@ import (
 func main() {
 	canvas := core.NewCanvas(800, 600)
 
-	scene := testscenes.CreateFlipcode1Scene()
+	scene := testscenes.CreateFlipcode3Scene()
 
 	renderer.Render(scene, canvas)
 

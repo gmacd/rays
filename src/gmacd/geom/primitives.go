@@ -8,7 +8,7 @@ import (
 type Primitive interface {
 	Intersects(ray core.Ray, maxDist float64) (result int, dist float64)
 	Normal(v core.Vec3) core.Vec3
-	Material() *Material
+	Material() *core.Material
 	Name() string
 	SetName(name string)
 
@@ -22,7 +22,7 @@ type Light interface {
 }
 
 type Sphere struct {
-	material *Material
+	material *core.Material
 	name     string
 
 	Centre core.Vec3
@@ -37,7 +37,7 @@ type Sphere struct {
 }
 
 func NewSphere(centre core.Vec3, radius float64) *Sphere {
-	material := NewMaterialBlank()
+	material := core.NewMaterialBlank()
 	return &Sphere{material, "", centre, radius, radius * radius, 1.0 / radius, false}
 }
 
@@ -79,7 +79,7 @@ func (sphere *Sphere) Normal(v core.Vec3) core.Vec3 {
 	return v.Sub(sphere.Centre).MulScalar(sphere.RadiusRecip)
 }
 
-func (sphere *Sphere) Material() *Material {
+func (sphere *Sphere) Material() *core.Material {
 	return sphere.material
 }
 
@@ -96,7 +96,7 @@ func (sphere *Sphere) SetName(name string) {
 }
 
 type Plane struct {
-	material *Material
+	material *core.Material
 	name     string
 
 	Plane core.Plane
@@ -104,7 +104,7 @@ type Plane struct {
 
 func NewPlane(normal core.Vec3, d float64) *Plane {
 	p := core.NewPlane(normal, d)
-	material := NewMaterialBlank()
+	material := core.NewMaterialBlank()
 	return &Plane{material, "", *p}
 }
 
@@ -136,7 +136,7 @@ func (plane *Plane) Normal(v core.Vec3) core.Vec3 {
 	return plane.Plane.Normal
 }
 
-func (plane *Plane) Material() *Material {
+func (plane *Plane) Material() *core.Material {
 	return plane.material
 }
 
@@ -146,22 +146,4 @@ func (plane *Plane) Name() string {
 
 func (plane *Plane) SetName(name string) {
 	plane.name = name
-}
-
-type Material struct {
-	Colour     core.ColourRGB
-	Reflection float64
-	Diffuse    float64
-}
-
-func NewMaterialBlank() *Material {
-	return &Material{core.NewColourRGB(0.2, 0.2, 0.2), 0.0, 0.2}
-}
-
-func NewMaterial(colour core.ColourRGB, reflection, diffuse float64) *Material {
-	return &Material{colour, reflection, diffuse}
-}
-
-func (m Material) Specular() float64 {
-	return 1.0 - m.Diffuse
 }
