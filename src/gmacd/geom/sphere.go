@@ -5,14 +5,11 @@ import (
 	"math"
 )
 
-////////////////////////
-/// TODO
-/// Make all private!
 type Sphere struct {
-	Centre      core.Vec3
-	Radius      float64
-	RadiusSq    float64
-	RadiusRecip float64
+	centre      core.Vec3
+	radius      float64
+	radiusSq    float64
+	radiusRecip float64
 
 	material *core.Material
 
@@ -28,9 +25,9 @@ func NewSphere(centre core.Vec3, radius float64) *Sphere {
 }
 
 func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
-	v := ray.Origin.Sub(sphere.Centre)
+	v := ray.Origin.Sub(sphere.centre)
 	b := -v.DotProduct(ray.Dir)
-	det := b*b - v.DotProduct(v) + sphere.RadiusSq
+	det := b*b - v.DotProduct(v) + sphere.radiusSq
 
 	if det > 0 {
 		det = math.Sqrt(det)
@@ -54,7 +51,7 @@ func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) (result int, dis
 }
 
 func (sphere *Sphere) Normal(v core.Vec3) core.Vec3 {
-	return v.Sub(sphere.Centre).MulScalar(sphere.RadiusRecip)
+	return v.Sub(sphere.centre).MulScalar(sphere.radiusRecip)
 }
 
 func (sphere *Sphere) Material() *core.Material {

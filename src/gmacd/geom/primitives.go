@@ -53,8 +53,6 @@ func NewLightData(pos core.Vec3) *LightData {
 }
 
 func NewLightDataNone() *LightData {
-	// TODO *************** Try nil
-	// ****************************
 	return &LightData{false, core.NewVec3Zero()}
 }
 

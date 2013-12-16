@@ -5,7 +5,7 @@ import (
 )
 
 type Plane struct {
-	Plane core.Plane
+	plane core.Plane
 
 	material *core.Material
 
@@ -20,12 +20,12 @@ func NewPlane(normal core.Vec3, d float64) *Plane {
 }
 
 func (plane *Plane) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
-	d := plane.Plane.Normal.DotProduct(ray.Dir)
+	d := plane.plane.Normal.DotProduct(ray.Dir)
 	if d == 0 {
 		return core.MISS, 0.0
 	}
 
-	dist = -(plane.Plane.Normal.DotProduct(ray.Origin) + plane.Plane.D) / d
+	dist = -(plane.plane.Normal.DotProduct(ray.Origin) + plane.plane.D) / d
 	if (dist > 0) && (dist < maxDist) {
 		return core.HIT, dist
 	}
@@ -34,7 +34,7 @@ func (plane *Plane) Intersects(ray core.Ray, maxDist float64) (result int, dist 
 }
 
 func (plane *Plane) Normal(v core.Vec3) core.Vec3 {
-	return plane.Plane.Normal
+	return plane.plane.Normal
 }
 
 func (plane *Plane) Material() *core.Material {
