@@ -4,6 +4,8 @@ import (
 	"math"
 )
 
+// TODO Point
+
 type Vec3 struct {
 	X, Y, Z float64
 }
@@ -45,13 +47,14 @@ func (v Vec3) Length() float64 {
 }
 
 func (v Vec3) Normal() Vec3 {
-	l := v.Length()
-	return NewVec3(v.X/l, v.Y/l, v.Z/l)
+	lr := 1.0 / v.Length()
+	return NewVec3(v.X*lr, v.Y*lr, v.Z*lr)
 }
 
 func (v Vec3) NormalWithLength() (normal Vec3, originalLength float64) {
 	l := v.Length()
-	return NewVec3(v.X/l, v.Y/l, v.Z/l), l
+	lr := 1.0 / l
+	return NewVec3(v.X*lr, v.Y*lr, v.Z*lr), l
 }
 
 func (v1 Vec3) DotProduct(v2 Vec3) float64 {

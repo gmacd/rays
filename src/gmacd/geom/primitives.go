@@ -2,19 +2,23 @@ package geom
 
 import (
 	"gmacd/core"
-	"math"
 )
 
-// TODO Primitive store ref to shape and material
-// TODO Light details as part of material
+// TODO Lights as separate entities?
+// TODO Light details as part of material?
+
 type Primitive interface {
-	Intersects(ray core.Ray, maxDist float64) (result int, dist float64)
-	Normal(v core.Vec3) core.Vec3
-	Material() *core.Material
 	Name() string
 	SetName(name string)
 
+	Shape
 	Light
+}
+
+type Shape interface {
+	Intersects(ray core.Ray, maxDist float64) (result int, dist float64)
+	Normal(v core.Vec3) core.Vec3
+	Material() *core.Material
 }
 
 type Light interface {
@@ -23,129 +27,45 @@ type Light interface {
 	LightCentre() core.Vec3
 }
 
-type Sphere struct {
-	material *core.Material
-	name     string
+type PrimitiveData struct {
+	name string
+}
 
-	Centre core.Vec3
-	Radius float64
-	// TODO remove?  Premature?  Simplify?
-	RadiusSq    float64
-	RadiusRecip float64
+func NewPrimitiveData() *PrimitiveData {
+	return &PrimitiveData{""}
+}
 
-	// TODO this seems wrong...
-	// TODO embed struct?
+func (primitive *PrimitiveData) Name() string {
+	return primitive.name
+}
+
+func (primitive *PrimitiveData) SetName(name string) {
+	primitive.name = name
+}
+
+type LightData struct {
 	isLight bool
+	pos     core.Vec3
 }
 
-func NewSphere(centre core.Vec3, radius float64) *Sphere {
-	material := core.NewMaterialBlank()
-	return &Sphere{material, "", centre, radius, radius * radius, 1.0 / radius, false}
+func NewLightData(pos core.Vec3) *LightData {
+	return &LightData{false, pos}
 }
 
-func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
-	v := ray.Origin.Sub(sphere.Centre)
-	b := -v.DotProduct(ray.Dir)
-	det := b*b - v.DotProduct(v) + sphere.RadiusSq
-
-	if det > 0 {
-		det = math.Sqrt(det)
-		i2 := b + det
-
-		if i2 > 0 {
-			i1 := b - det
-
-			if i1 < 0 {
-				if i2 < maxDist {
-					return core.HIT_FROM_INSIDE, i2
-				}
-			} else {
-				if i1 < maxDist {
-					return core.HIT, i1
-				}
-			}
-		}
-	}
-	return core.MISS, 0
+func NewLightDataNone() *LightData {
+	// TODO *************** Try nil
+	// ****************************
+	return &LightData{false, core.NewVec3Zero()}
 }
 
-func (sphere *Sphere) IsLight() bool {
-	return sphere.isLight
+func (light *LightData) IsLight() bool {
+	return light.isLight
 }
 
-func (sphere *Sphere) SetIsLight(isLight bool) {
-	sphere.isLight = isLight
+func (light *LightData) SetIsLight(isLight bool) {
+	light.isLight = isLight
 }
 
-func (sphere *Sphere) Normal(v core.Vec3) core.Vec3 {
-	return v.Sub(sphere.Centre).MulScalar(sphere.RadiusRecip)
-}
-
-func (sphere *Sphere) Material() *core.Material {
-	return sphere.material
-}
-
-func (sphere *Sphere) LightCentre() core.Vec3 {
-	return sphere.Centre
-}
-
-func (sphere *Sphere) Name() string {
-	return sphere.name
-}
-
-func (sphere *Sphere) SetName(name string) {
-	sphere.name = name
-}
-
-type Plane struct {
-	material *core.Material
-	name     string
-
-	Plane core.Plane
-}
-
-func NewPlane(normal core.Vec3, d float64) *Plane {
-	p := core.NewPlane(normal, d)
-	material := core.NewMaterialBlank()
-	return &Plane{material, "", *p}
-}
-
-func (plane *Plane) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
-	d := plane.Plane.Normal.DotProduct(ray.Dir)
-	if d == 0 {
-		return core.MISS, 0.0
-	}
-
-	dist = -(plane.Plane.Normal.DotProduct(ray.Origin) + plane.Plane.D) / d
-	if (dist > 0) && (dist < maxDist) {
-		return core.HIT, dist
-	}
-
-	return core.MISS, 0.0
-}
-
-func (plane *Plane) IsLight() bool {
-	return false
-}
-
-func (plane *Plane) SetIsLight(isLight bool) {}
-
-func (plane *Plane) LightCentre() core.Vec3 {
-	return core.NewVec3Zero()
-}
-
-func (plane *Plane) Normal(v core.Vec3) core.Vec3 {
-	return plane.Plane.Normal
-}
-
-func (plane *Plane) Material() *core.Material {
-	return plane.material
-}
-
-func (plane *Plane) Name() string {
-	return plane.name
-}
-
-func (plane *Plane) SetName(name string) {
-	plane.name = name
+func (light *LightData) LightCentre() core.Vec3 {
+	return light.pos
 }
