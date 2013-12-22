@@ -11,6 +11,17 @@ func NewPlane(normal Vec3, d float64) *Plane {
 	return &Plane{normal, d}
 }
 
+type Sphere struct {
+	Centre      Vec3
+	Radius      float64
+	RadiusSq    float64
+	RadiusRecip float64
+}
+
+func NewSphere(centre Vec3, radius float64) *Sphere {
+	return &Sphere{centre, radius, radius * radius, 1.0 / radius}
+}
+
 type ColourRGB struct {
 	R, G, B float64
 }
