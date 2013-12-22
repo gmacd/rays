@@ -57,6 +57,13 @@ func (v Vec3) NormalWithLength() (normal Vec3, originalLength float64) {
 	return NewVec3(v.X*lr, v.Y*lr, v.Z*lr), l
 }
 
-func (v1 Vec3) DotProduct(v2 Vec3) float64 {
+func (v1 Vec3) Dot(v2 Vec3) float64 {
 	return v1.X*v2.X + v1.Y*v2.Y + v1.Z*v2.Z
+}
+
+func (v1 Vec3) Cross(v2 Vec3) (v3 Vec3) {
+	return NewVec3(
+		(v1.Y*v2.Z)-(v1.Z*v2.Y),
+		(v1.Z*v2.X)-(v1.X*v2.Z),
+		(v1.X*v2.Y)-(v1.Y*v2.X))
 }

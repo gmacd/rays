@@ -20,12 +20,12 @@ func NewPlane(normal core.Vec3, d float64) *Plane {
 }
 
 func (plane *Plane) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
-	d := plane.plane.Normal.DotProduct(ray.Dir)
+	d := plane.plane.Normal.Dot(ray.Dir)
 	if d == 0 {
 		return core.MISS, 0.0
 	}
 
-	dist = -(plane.plane.Normal.DotProduct(ray.Origin) + plane.plane.D) / d
+	dist = -(plane.plane.Normal.Dot(ray.Origin) + plane.plane.D) / d
 	if (dist > 0) && (dist < maxDist) {
 		return core.HIT, dist
 	}

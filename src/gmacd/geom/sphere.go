@@ -26,8 +26,8 @@ func NewSphere(centre core.Vec3, radius float64) *Sphere {
 
 func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
 	v := ray.Origin.Sub(sphere.centre)
-	b := -v.DotProduct(ray.Dir)
-	det := b*b - v.DotProduct(v) + sphere.radiusSq
+	b := -v.Dot(ray.Dir)
+	det := b*b - v.Dot(v) + sphere.radiusSq
 
 	if det > 0 {
 		det = math.Sqrt(det)

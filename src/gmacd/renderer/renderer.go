@@ -94,7 +94,7 @@ func renderChunk(scene *geom.Scene, camera *Camera, canvas *core.Canvas, c chan 
 	for y := y1; y < y2; y++ {
 		for x := x1; x < x2; x++ {
 			dir := camera.ScreenToWorld(x, y).Sub(camera.origin).Normal()
-			ray := core.NewRay(camera.origin, dir, 0)
+			ray := core.NewRay(camera.origin, dir)
 
 			raytrace(scene, ray, canvas, x, y, c)
 		}

@@ -51,7 +51,7 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float
 		l, lightDist := light.LightCentre().Sub(intersectionPoint).NormalWithLength()
 		{
 			// If point light
-			r := core.NewRay(intersectionPoint.Add(l.MulScalar(core.EPSILON)), l, ray.Depth+1)
+			r := core.NewRayWithDepth(intersectionPoint.Add(l.MulScalar(core.EPSILON)), l, ray.Depth+1)
 			for _, primForShadow := range scene.Primitives {
 				if primForShadow != light {
 					if result, _ := primForShadow.Intersects(r, lightDist); result != core.MISS {
@@ -65,7 +65,7 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float
 		// Diffuse
 		n := prim.Normal(intersectionPoint)
 		if prim.Material().Diffuse > 0 {
-			dot := n.DotProduct(l)
+			dot := n.Dot(l)
 			if dot > 0 {
 				diffuse := dot * prim.Material().Diffuse * shade
 				acc.AddTo(prim.Material().Colour.MulScalar(diffuse).Mul(light.Material().Colour))
@@ -75,8 +75,8 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float
 		// Specular
 		specular := prim.Material().Specular
 		v := ray.Dir
-		r := l.Sub(n.MulScalar(2.0 * l.DotProduct(n)))
-		dot := v.DotProduct(r)
+		r := l.Sub(n.MulScalar(2.0 * l.Dot(n)))
+		dot := v.Dot(r)
 		if dot > 0 {
 			specular := math.Pow(dot, 20) * specular * shade
 			acc.AddTo(light.Material().Colour.MulScalar(specular))
@@ -87,8 +87,8 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float
 	reflection := prim.Material().Reflection
 	if (reflection > 0) && (ray.Depth < MAX_TRACE_DEPTH) {
 		n := prim.Normal(intersectionPoint)
-		r := ray.Dir.Sub(n.MulScalar(2.0 * ray.Dir.DotProduct(n)))
-		reflectionRay := core.NewRay(
+		r := ray.Dir.Sub(n.MulScalar(2.0 * ray.Dir.Dot(n)))
+		reflectionRay := core.NewRayWithDepth(
 			intersectionPoint.Add(r.MulScalar(core.EPSILON)), r, ray.Depth+1)
 		reflectionColour := core.NewColourRGB(0, 0, 0)
 
@@ -102,12 +102,12 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float
 		primRIndex := prim.Material().RefractiveIndex
 		n := rIndex / primRIndex
 		N := prim.Normal(intersectionPoint).MulScalar(float64(intersectionResult))
-		cosI := -N.DotProduct(ray.Dir)
+		cosI := -N.Dot(ray.Dir)
 		cosT2 := 1.0 - n*n*(1.0-cosI*cosI)
 		if cosT2 > 0 {
 			T := ray.Dir.MulScalar(n).Add(N.MulScalar(n*cosI - math.Sqrt(cosT2)))
 			refractiveColour := core.NewColourRGB(0, 0, 0)
-			refractiveRay := core.NewRay(
+			refractiveRay := core.NewRayWithDepth(
 				intersectionPoint.Add(T.MulScalar(core.EPSILON)),
 				T, ray.Depth+1)
 			_, refractiveDist := Raytrace(scene, refractiveRay, &refractiveColour, primRIndex)
