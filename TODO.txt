@@ -1,0 +1,6 @@
+TODO...
+
+Readers
+ - Obj reader/parser tests
+ - Rename obj files - there's a objreader in modelparsers....
+ 
