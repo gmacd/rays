@@ -12,7 +12,7 @@ func main() {
 	canvas := core.NewCanvas(640, 480)
 
 	sceneStartTime := time.Now()
-	scene := testscenes.CreateCubeScene()
+	scene := testscenes.CreateTriangleScene()
 	sceneEndTime := time.Now()
 
 	renderStartTime := time.Now()

@@ -59,21 +59,21 @@ func (reader *ObjReader) Face(vertexIds, textureVertexIds, normalIds []int) {
 	numTexVerts := len(reader.model.TextureVertices)
 	numNormals := len(reader.model.Normals)
 
+	t := geom.NewTri()
 	for i := 0; i < len(vertexIds); i++ {
-		t := geom.NewTri()
 
 		vertId := vertexIds[i]
 		if vertId < 0 {
 			vertId += numVerts // Offset from last
 		}
-		t.Vertex = &reader.model.Vertices[vertId]
+		t.Vertices = append(t.Vertices, &reader.model.Vertices[vertId])
 
 		if hasTextureVertices {
 			texVertId := textureVertexIds[i]
 			if texVertId < 0 {
 				texVertId += numTexVerts // Offset from last
 			}
-			t.TextureVertex = &reader.model.TextureVertices[texVertId]
+			t.TextureVertices = append(t.TextureVertices, &reader.model.TextureVertices[texVertId])
 		}
 
 		if hasNormals {
@@ -81,11 +81,11 @@ func (reader *ObjReader) Face(vertexIds, textureVertexIds, normalIds []int) {
 			if normalId < 0 {
 				normalId += numNormals // Offset from last
 			}
-			t.Normal = &reader.model.Normals[normalId]
+			t.Normals = append(t.Normals, &reader.model.Normals[normalId])
 		}
-
-		reader.model.Triangles = append(reader.model.Triangles, *t)
 	}
+
+	reader.model.Triangles = append(reader.model.Triangles, *t)
 }
 
 func (reader *ObjReader) MaterialLibrary(filename string) {

@@ -9,6 +9,8 @@ type Primitive interface {
 	SetName(name string)
 
 	Shape
+
+	// TODO remove and become property of material?
 	Light
 }
 
