@@ -2,6 +2,7 @@ package geom
 
 import (
 	"gmacd/core"
+	"gmacd/intersections"
 )
 
 type Primitive interface {
@@ -15,7 +16,7 @@ type Primitive interface {
 }
 
 type Shape interface {
-	Intersects(ray core.Ray, maxDist float64) (result int, dist float64)
+	Intersects(ray core.Ray, maxDist float64) intersections.HitDetails
 	Normal(v core.Vec3) core.Vec3
 	Material() *core.Material
 }

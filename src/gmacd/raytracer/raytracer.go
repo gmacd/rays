@@ -3,33 +3,34 @@ package raytracer
 import (
 	"gmacd/core"
 	"gmacd/geom"
+	"gmacd/intersections"
 	"math"
 )
 
 const MAX_TRACE_DEPTH = 5
 
-func FindNearestIntersection(scene *geom.Scene, ray core.Ray) (prim geom.Primitive, result int, dist float64) {
-	dist = 1000000.0
+func FindNearestIntersection(scene *geom.Scene, ray core.Ray) (prim geom.Primitive, hitDetails intersections.HitDetails) {
+	maxDist := 1000000.0
 
 	// Find nearest intersection
-	result = core.MISS
+	hitDetails = intersections.NewMiss()
 	for _, p := range scene.Primitives {
-		if pResult, pDist := p.Intersects(ray, dist); pResult != core.MISS {
+		if currHitDetails := p.Intersects(ray, maxDist); currHitDetails.IsAnyHit() {
 			prim = p
-			result = pResult
-			dist = pDist
+			hitDetails = currHitDetails
+			maxDist = currHitDetails.Dist
 		}
 	}
 
-	return prim, result, dist
+	return prim, hitDetails
 }
 
 func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float64) (prim geom.Primitive, dist float64) {
-	intersectionResult := core.MISS
-	prim, intersectionResult, dist = FindNearestIntersection(scene, ray)
+	prim, hitDetails := FindNearestIntersection(scene, ray)
 	if prim == nil {
 		return nil, 0
 	}
+	dist = hitDetails.Dist
 
 	// This is a bit rubbish - always white for direct light hit?
 	if prim.IsLight() {
@@ -54,7 +55,7 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float
 			r := core.NewRayWithDepth(intersectionPoint.Add(l.MulScalar(core.EPSILON)), l, ray.Depth+1)
 			for _, primForShadow := range scene.Primitives {
 				if primForShadow != light {
-					if result, _ := primForShadow.Intersects(r, lightDist); result != core.MISS {
+					if result := primForShadow.Intersects(r, lightDist); result.IsAnyHit() {
 						shade = 0
 						break
 					}
@@ -101,7 +102,7 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float
 	if (refraction > 0) && (ray.Depth < MAX_TRACE_DEPTH) {
 		primRIndex := prim.Material().RefractiveIndex
 		n := rIndex / primRIndex
-		N := prim.Normal(intersectionPoint).MulScalar(float64(intersectionResult))
+		N := prim.Normal(intersectionPoint).MulScalar(float64(hitDetails.Result))
 		cosI := -N.Dot(ray.Dir)
 		cosT2 := 1.0 - n*n*(1.0-cosI*cosI)
 		if cosT2 > 0 {

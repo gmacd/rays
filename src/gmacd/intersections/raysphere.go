@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-func IntersectRaySphere(r core.Ray, sphere *core.Sphere, maxDist float64) (result int, dist float64) {
+func IntersectRaySphere(r core.Ray, sphere *core.Sphere, maxDist float64) HitDetails {
 	v := r.Origin.Sub(sphere.Centre)
 	b := -v.Dot(r.Dir)
 	det := b*b - v.Dot(v) + sphere.RadiusSq
@@ -19,14 +19,14 @@ func IntersectRaySphere(r core.Ray, sphere *core.Sphere, maxDist float64) (resul
 
 			if i1 < 0 {
 				if i2 < maxDist {
-					return core.HIT_FROM_INSIDE, i2
+					return NewHitFromInside(i2)
 				}
 			} else {
 				if i1 < maxDist {
-					return core.HIT, i1
+					return NewHit(i1)
 				}
 			}
 		}
 	}
-	return core.MISS, 0
+	return NewMiss()
 }

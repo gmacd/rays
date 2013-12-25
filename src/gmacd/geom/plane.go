@@ -20,7 +20,7 @@ func NewPlane(normal core.Vec3, d float64) *Plane {
 	return &Plane{p, material, NewPrimitiveData(), NewLightDataNone()}
 }
 
-func (plane *Plane) Intersects(ray core.Ray, maxDist float64) (result int, dist float64) {
+func (plane *Plane) Intersects(ray core.Ray, maxDist float64) intersections.HitDetails {
 	return intersections.IntersectRayPlane(ray, plane.plane, maxDist)
 }
 
