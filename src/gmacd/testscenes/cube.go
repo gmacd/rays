@@ -11,7 +11,7 @@ import (
 func CreateCubeScene() *geom.Scene {
 	scene := geom.NewScene()
 
-	objReader := objParser.NewObjReader(scene.Textures, "data/cube/cube.obj")
+	objReader := objParser.NewObjReader(scene.Textures(), "data/cube/cube.obj")
 	if err := obj.Read(objReader); err != nil {
 		fmt.Printf("** Error loading %v: %v\n", objReader.Filename(), err.Error())
 		return scene

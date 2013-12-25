@@ -5,15 +5,33 @@ import (
 )
 
 type Scene struct {
-	Primitives []Primitive
-	Textures   core.Textures
+	allPrimitives []Primitive
+	lights        []Primitive
+	textures      core.Textures
 }
 
 func NewScene() *Scene {
-	primitives := make([]Primitive, 0, 20)
-	return &Scene{primitives, core.NewTextures()}
+	return &Scene{
+		make([]Primitive, 0, 100),
+		make([]Primitive, 0, 100),
+		core.NewTextures()}
 }
 
 func (s *Scene) AddPrimitive(p Primitive) {
-	s.Primitives = append(s.Primitives, p)
+	s.allPrimitives = append(s.allPrimitives, p)
+	if p.IsLight() {
+		s.lights = append(s.lights, p)
+	}
+}
+
+func (s *Scene) AllPrimitives() []Primitive {
+	return s.allPrimitives
+}
+
+func (s *Scene) Lights() []Primitive {
+	return s.lights
+}
+
+func (s *Scene) Textures() core.Textures {
+	return s.textures
 }

@@ -9,43 +9,39 @@ import (
 
 const MAX_TRACE_DEPTH = 5
 
-func FindNearestIntersection(scene *geom.Scene, ray core.Ray) (prim geom.Primitive, hitDetails intersections.HitDetails) {
-	maxDist := 1000000.0
+func FindNearestIntersection(scene *geom.Scene, ray core.Ray) (hitPrim geom.Primitive, hitDetails intersections.HitDetails) {
+	maxDist := math.MaxFloat64
 
 	// Find nearest intersection
 	hitDetails = intersections.NewMiss()
-	for _, p := range scene.Primitives {
+	for _, p := range scene.AllPrimitives() {
 		if currHitDetails := p.Intersects(ray, maxDist); currHitDetails.IsAnyHit() {
-			prim = p
+			hitPrim = p
 			hitDetails = currHitDetails
 			maxDist = currHitDetails.Dist
 		}
 	}
 
-	return prim, hitDetails
+	return hitPrim, hitDetails
 }
 
-func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float64) (prim geom.Primitive, dist float64) {
-	prim, hitDetails := FindNearestIntersection(scene, ray)
-	if prim == nil {
-		return nil, 0
+func Raytrace(scene *geom.Scene, ray core.Ray, rIndex float64) (hitPrim geom.Primitive, hitDetails intersections.HitDetails, colour core.ColourRGB) {
+	colour = core.NewColourRGB(0, 0, 0)
+	hitPrim, hitDetails = FindNearestIntersection(scene, ray)
+	if hitDetails.IsMiss() {
+		return hitPrim, hitDetails, colour
 	}
-	dist = hitDetails.Dist
 
 	// This is a bit rubbish - always white for direct light hit?
-	if prim.IsLight() {
-		acc.Set(1.0, 1.0, 1.0)
-		return prim, dist
+	if hitPrim.IsLight() {
+		return hitPrim, hitDetails, core.NewColourRGB(1, 1, 1)
 	}
 
-	intersectionPoint := ray.Origin.Add(ray.Dir.MulScalar(dist))
+	material := hitPrim.Material()
+	intersectionPoint := ray.Origin.Add(ray.Dir.MulScalar(hitDetails.Dist))
 
 	// Trace lights
-	for _, light := range scene.Primitives {
-		if !light.IsLight() {
-			continue
-		}
-
+	for _, light := range scene.Lights() {
 		// Point light shadows
 		shade := 1.0
 		// TODO is point light?
@@ -53,9 +49,9 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float
 		{
 			// If point light
 			r := core.NewRayWithDepth(intersectionPoint.Add(l.MulScalar(core.EPSILON)), l, ray.Depth+1)
-			for _, primForShadow := range scene.Primitives {
+			for _, primForShadow := range scene.AllPrimitives() {
 				if primForShadow != light {
-					if result := primForShadow.Intersects(r, lightDist); result.IsAnyHit() {
+					if primForShadow.Intersects(r, lightDist).IsAnyHit() {
 						shade = 0
 						break
 					}
@@ -64,64 +60,62 @@ func Raytrace(scene *geom.Scene, ray core.Ray, acc *core.ColourRGB, rIndex float
 		}
 
 		// Diffuse
-		n := prim.Normal(intersectionPoint)
-		if prim.Material().Diffuse > 0 {
+		n := hitPrim.Normal(intersectionPoint)
+		if material.Diffuse > 0 {
 			dot := n.Dot(l)
 			if dot > 0 {
-				diffuse := dot * prim.Material().Diffuse * shade
-				acc.AddTo(prim.Material().Colour.MulScalar(diffuse).Mul(light.Material().Colour))
+				diffuse := dot * material.Diffuse * shade
+				colour.AddTo(material.Colour.MulScalar(diffuse).Mul(light.Material().Colour))
 			}
 		}
 
 		// Specular
-		specular := prim.Material().Specular
+		specular := material.Specular
 		v := ray.Dir
 		r := l.Sub(n.MulScalar(2.0 * l.Dot(n)))
 		dot := v.Dot(r)
 		if dot > 0 {
 			specular := math.Pow(dot, 20) * specular * shade
-			acc.AddTo(light.Material().Colour.MulScalar(specular))
+			colour.AddTo(light.Material().Colour.MulScalar(specular))
 		}
 	}
 
 	// Reflection
-	reflection := prim.Material().Reflection
+	reflection := material.Reflection
 	if (reflection > 0) && (ray.Depth < MAX_TRACE_DEPTH) {
-		n := prim.Normal(intersectionPoint)
+		n := hitPrim.Normal(intersectionPoint)
 		r := ray.Dir.Sub(n.MulScalar(2.0 * ray.Dir.Dot(n)))
 		reflectionRay := core.NewRayWithDepth(
 			intersectionPoint.Add(r.MulScalar(core.EPSILON)), r, ray.Depth+1)
-		reflectionColour := core.NewColourRGB(0, 0, 0)
 
-		Raytrace(scene, reflectionRay, &reflectionColour, rIndex)
-		acc.AddTo(prim.Material().Colour.Mul(reflectionColour).MulScalar(reflection))
+		_, _, reflectionColour := Raytrace(scene, reflectionRay, rIndex)
+		colour.AddTo(material.Colour.Mul(reflectionColour).MulScalar(reflection))
 	}
 
 	// Refraction
-	refraction := prim.Material().Refraction
+	refraction := material.Refraction
 	if (refraction > 0) && (ray.Depth < MAX_TRACE_DEPTH) {
-		primRIndex := prim.Material().RefractiveIndex
+		primRIndex := material.RefractiveIndex
 		n := rIndex / primRIndex
-		N := prim.Normal(intersectionPoint).MulScalar(float64(hitDetails.Result))
+		N := hitPrim.Normal(intersectionPoint).MulScalar(float64(hitDetails.Result))
 		cosI := -N.Dot(ray.Dir)
 		cosT2 := 1.0 - n*n*(1.0-cosI*cosI)
 		if cosT2 > 0 {
 			T := ray.Dir.MulScalar(n).Add(N.MulScalar(n*cosI - math.Sqrt(cosT2)))
-			refractiveColour := core.NewColourRGB(0, 0, 0)
 			refractiveRay := core.NewRayWithDepth(
 				intersectionPoint.Add(T.MulScalar(core.EPSILON)),
 				T, ray.Depth+1)
-			_, refractiveDist := Raytrace(scene, refractiveRay, &refractiveColour, primRIndex)
+			_, refractiveHitDetails, refractiveColour := Raytrace(scene, refractiveRay, primRIndex)
 
-			absorbance := prim.Material().Colour.MulScalar(0.15 * -refractiveDist)
+			absorbance := material.Colour.MulScalar(0.15 * -refractiveHitDetails.Dist)
 			transparency := core.NewColourRGB(
 				math.Exp(absorbance.R),
 				math.Exp(absorbance.G),
 				math.Exp(absorbance.B))
 
-			acc.AddTo(refractiveColour.Mul(transparency))
+			colour.AddTo(refractiveColour.Mul(transparency))
 		}
 	}
 
-	return prim, dist
+	return hitPrim, hitDetails, colour
 }
