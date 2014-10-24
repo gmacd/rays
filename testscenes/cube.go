@@ -2,16 +2,19 @@ package testscenes
 
 import (
 	"fmt"
-	"gmacd/core"
-	"gmacd/geom"
-	objParser "gmacd/modelparsers/obj"
-	"gmacd/modelreaders/obj"
+
+	"github.com/andrebq/gas"
+	"github.com/gmacd/rays/core"
+	"github.com/gmacd/rays/geom"
+	objParser "github.com/gmacd/rays/modelparsers/obj"
+	"github.com/gmacd/rays/modelreaders/obj"
 )
 
 func CreateCubeScene() *geom.Scene {
 	scene := geom.NewScene()
 
-	objReader := objParser.NewObjReader(scene.Textures(), "data/cube/cube.obj")
+	objPath := gas.MustAbs("github.com/gmacd/rays/assets/cube/cube.obj")
+	objReader := objParser.NewObjReader(scene.Textures(), objPath)
 	if err := obj.Read(objReader); err != nil {
 		fmt.Printf("** Error loading %v: %v\n", objReader.Filename(), err.Error())
 		return scene

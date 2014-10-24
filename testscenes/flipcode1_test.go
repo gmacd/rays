@@ -1,9 +1,10 @@
 package testscenes
 
 import (
-	"gmacd/core"
-	"gmacd/renderer"
 	"testing"
+
+	"github.com/gmacd/rays/core"
+	"github.com/gmacd/rays/renderer"
 )
 
 func BenchmarkFlipcode1(b *testing.B) {

@@ -2,11 +2,12 @@ package renderer
 
 import (
 	"fmt"
-	"gmacd/core"
-	"gmacd/geom"
-	"gmacd/raytracer"
 	"math"
 	"runtime"
+
+	"github.com/gmacd/rays/core"
+	"github.com/gmacd/rays/geom"
+	"github.com/gmacd/rays/raytracer"
 )
 
 const (

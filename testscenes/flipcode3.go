@@ -1,8 +1,8 @@
 package testscenes
 
 import (
-	"gmacd/core"
-	"gmacd/geom"
+	"github.com/gmacd/rays/core"
+	"github.com/gmacd/rays/geom"
 )
 
 func CreateFlipcode3Scene() *geom.Scene {

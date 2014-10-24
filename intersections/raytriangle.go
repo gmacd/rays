@@ -1,7 +1,7 @@
 package intersections
 
 import (
-	"gmacd/core"
+	"github.com/gmacd/rays/core"
 )
 
 // Assumes the ray and triangle points are in the same space

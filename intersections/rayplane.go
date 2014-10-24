@@ -1,7 +1,7 @@
 package intersections
 
 import (
-	"gmacd/core"
+	"github.com/gmacd/rays/core"
 )
 
 func IntersectRayPlane(r core.Ray, plane *core.Plane, maxDist float64) HitDetails {

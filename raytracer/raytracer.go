@@ -1,10 +1,11 @@
 package raytracer
 
 import (
-	"gmacd/core"
-	"gmacd/geom"
-	"gmacd/intersections"
 	"math"
+
+	"github.com/gmacd/rays/core"
+	"github.com/gmacd/rays/geom"
+	"github.com/gmacd/rays/intersections"
 )
 
 const MAX_TRACE_DEPTH = 5

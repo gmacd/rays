@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"gmacd/core"
-	"gmacd/renderer"
-	"gmacd/testscenes"
 	"time"
+
+	"github.com/gmacd/rays/core"
+	"github.com/gmacd/rays/renderer"
+	"github.com/gmacd/rays/testscenes"
 )
 
 func main() {

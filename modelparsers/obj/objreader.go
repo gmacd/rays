@@ -2,10 +2,11 @@ package obj
 
 import (
 	"fmt"
-	"gmacd/core"
-	"gmacd/geom"
-	"gmacd/modelreaders/obj"
 	"path/filepath"
+
+	"github.com/gmacd/rays/core"
+	"github.com/gmacd/rays/geom"
+	"github.com/gmacd/rays/modelreaders/obj"
 )
 
 // TODO rename?

@@ -1,8 +1,8 @@
 package geom
 
 import (
-	"gmacd/core"
-	"gmacd/intersections"
+	"github.com/gmacd/rays/core"
+	"github.com/gmacd/rays/intersections"
 )
 
 type Plane struct {

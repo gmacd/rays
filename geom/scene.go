@@ -1,7 +1,7 @@
 package geom
 
 import (
-	"gmacd/core"
+	"github.com/gmacd/rays/core"
 )
 
 type Scene struct {
