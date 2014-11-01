@@ -67,14 +67,14 @@ func (reader *ObjReader) Face(vertexIds, textureVertexIds, normalIds []int) {
 		if vertId < 0 {
 			vertId += numVerts // Offset from last
 		}
-		t.Vertices = append(t.Vertices, &reader.model.Vertices[vertId])
+		t.Vertices = append(t.Vertices, reader.model.Vertices[vertId])
 
 		if hasTextureVertices {
 			texVertId := textureVertexIds[i]
 			if texVertId < 0 {
 				texVertId += numTexVerts // Offset from last
 			}
-			t.TextureVertices = append(t.TextureVertices, &reader.model.TextureVertices[texVertId])
+			t.TextureVertices = append(t.TextureVertices, reader.model.TextureVertices[texVertId])
 		}
 
 		if hasNormals {
@@ -82,7 +82,7 @@ func (reader *ObjReader) Face(vertexIds, textureVertexIds, normalIds []int) {
 			if normalId < 0 {
 				normalId += numNormals // Offset from last
 			}
-			t.Normals = append(t.Normals, &reader.model.Normals[normalId])
+			t.Normals = append(t.Normals, reader.model.Normals[normalId])
 		}
 	}
 
