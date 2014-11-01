@@ -6,7 +6,7 @@ import (
 	"github.com/gmacd/rays/core"
 )
 
-func IntersectRaySphere(r core.Ray, sphere *core.Sphere, maxDist float64) HitDetails {
+func IntersectRaySphere(r core.Ray, sphere *core.Sphere, maxDist float64) (hit HitType, dist float64) {
 	v := r.Origin.Sub(sphere.Centre)
 	b := -v.Dot(r.Dir)
 	det := b*b - v.Dot(v) + sphere.RadiusSq
@@ -20,14 +20,14 @@ func IntersectRaySphere(r core.Ray, sphere *core.Sphere, maxDist float64) HitDet
 
 			if i1 < 0 {
 				if i2 < maxDist {
-					return NewHitFromInside(i2)
+					return HIT_FROM_INSIDE, i2
 				}
 			} else {
 				if i1 < maxDist {
-					return NewHit(i1)
+					return HIT, i1
 				}
 			}
 		}
 	}
-	return NewMiss()
+	return MISS, 0
 }

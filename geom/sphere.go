@@ -20,7 +20,7 @@ func NewSphere(centre core.Vec3, radius float64) *Sphere {
 		NewPrimitiveData(), NewLightData(centre)}
 }
 
-func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) intersections.HitDetails {
+func (sphere *Sphere) Intersects(ray core.Ray, maxDist float64) (hit intersections.HitType, dist float64) {
 	return intersections.IntersectRaySphere(ray, sphere.sphere, maxDist)
 }
 

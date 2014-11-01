@@ -16,7 +16,7 @@ type Primitive interface {
 }
 
 type Shape interface {
-	Intersects(ray core.Ray, maxDist float64) intersections.HitDetails
+	Intersects(ray core.Ray, maxDist float64) (hit intersections.HitType, dist float64)
 	Normal(v core.Vec3) core.Vec3
 	Material() *core.Material
 }

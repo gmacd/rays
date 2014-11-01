@@ -10,36 +10,36 @@ import (
 
 const MAX_TRACE_DEPTH = 5
 
-func FindNearestIntersection(scene *geom.Scene, ray core.Ray) (hitPrim geom.Primitive, hitDetails intersections.HitDetails) {
+func FindNearestIntersection(scene *geom.Scene, ray core.Ray) (hitPrim geom.Primitive, hit intersections.HitType, dist float64) {
 	maxDist := math.MaxFloat64
 
 	// Find nearest intersection
-	hitDetails = intersections.NewMiss()
 	for _, p := range scene.AllPrimitives() {
-		if currHitDetails := p.Intersects(ray, maxDist); currHitDetails.IsAnyHit() {
+		currHit, currHitDist := p.Intersects(ray, maxDist)
+		if currHit != intersections.MISS {
 			hitPrim = p
-			hitDetails = currHitDetails
-			maxDist = currHitDetails.Dist
+			hit = currHit
+			dist = currHitDist
 		}
 	}
 
-	return hitPrim, hitDetails
+	return hitPrim, hit, dist
 }
 
-func Raytrace(scene *geom.Scene, ray core.Ray, rIndex float64) (hitPrim geom.Primitive, hitDetails intersections.HitDetails, colour core.ColourRGB) {
+func Raytrace(scene *geom.Scene, ray core.Ray, rIndex float64) (hitPrim geom.Primitive, hit intersections.HitType, dist float64, colour core.ColourRGB) {
 	colour = core.NewColourRGB(0, 0, 0)
-	hitPrim, hitDetails = FindNearestIntersection(scene, ray)
-	if hitDetails.IsMiss() {
-		return hitPrim, hitDetails, colour
+	hitPrim, hit, dist = FindNearestIntersection(scene, ray)
+	if hit == intersections.MISS {
+		return hitPrim, hit, dist, colour
 	}
 
 	// This is a bit rubbish - always white for direct light hit?
 	if hitPrim.IsLight() {
-		return hitPrim, hitDetails, core.NewColourRGB(1, 1, 1)
+		return hitPrim, hit, dist, core.NewColourRGB(1, 1, 1)
 	}
 
 	material := hitPrim.Material()
-	intersectionPoint := ray.Origin.Add(ray.Dir.MulScalar(hitDetails.Dist))
+	intersectionPoint := ray.Origin.Add(ray.Dir.MulScalar(dist))
 
 	// Trace lights
 	for _, light := range scene.Lights() {
@@ -52,7 +52,7 @@ func Raytrace(scene *geom.Scene, ray core.Ray, rIndex float64) (hitPrim geom.Pri
 			r := core.NewRayWithDepth(intersectionPoint.Add(l.MulScalar(core.EPSILON)), l, ray.Depth+1)
 			for _, primForShadow := range scene.AllPrimitives() {
 				if primForShadow != light {
-					if primForShadow.Intersects(r, lightDist).IsAnyHit() {
+					if lightHit, _ := primForShadow.Intersects(r, lightDist); lightHit != intersections.MISS {
 						shade = 0
 						break
 					}
@@ -89,7 +89,7 @@ func Raytrace(scene *geom.Scene, ray core.Ray, rIndex float64) (hitPrim geom.Pri
 		reflectionRay := core.NewRayWithDepth(
 			intersectionPoint.Add(r.MulScalar(core.EPSILON)), r, ray.Depth+1)
 
-		_, _, reflectionColour := Raytrace(scene, reflectionRay, rIndex)
+		_, _, _, reflectionColour := Raytrace(scene, reflectionRay, rIndex)
 		colour.AddTo(material.Colour.Mul(reflectionColour).MulScalar(reflection))
 	}
 
@@ -98,7 +98,7 @@ func Raytrace(scene *geom.Scene, ray core.Ray, rIndex float64) (hitPrim geom.Pri
 	if (refraction > 0) && (ray.Depth < MAX_TRACE_DEPTH) {
 		primRIndex := material.RefractiveIndex
 		n := rIndex / primRIndex
-		N := hitPrim.Normal(intersectionPoint).MulScalar(float64(hitDetails.Result))
+		N := hitPrim.Normal(intersectionPoint).MulScalar(float64(hit))
 		cosI := -N.Dot(ray.Dir)
 		cosT2 := 1.0 - n*n*(1.0-cosI*cosI)
 		if cosT2 > 0 {
@@ -106,9 +106,9 @@ func Raytrace(scene *geom.Scene, ray core.Ray, rIndex float64) (hitPrim geom.Pri
 			refractiveRay := core.NewRayWithDepth(
 				intersectionPoint.Add(T.MulScalar(core.EPSILON)),
 				T, ray.Depth+1)
-			_, refractiveHitDetails, refractiveColour := Raytrace(scene, refractiveRay, primRIndex)
+			_, _, refractiveHitDist, refractiveColour := Raytrace(scene, refractiveRay, primRIndex)
 
-			absorbance := material.Colour.MulScalar(0.15 * -refractiveHitDetails.Dist)
+			absorbance := material.Colour.MulScalar(0.15 * -refractiveHitDist)
 			transparency := core.NewColourRGB(
 				math.Exp(absorbance.R),
 				math.Exp(absorbance.G),
@@ -118,5 +118,5 @@ func Raytrace(scene *geom.Scene, ray core.Ray, rIndex float64) (hitPrim geom.Pri
 		}
 	}
 
-	return hitPrim, hitDetails, colour
+	return hitPrim, hit, dist, colour
 }

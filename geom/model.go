@@ -43,14 +43,14 @@ func NewModel() *Model {
 	}
 }
 
-func (model *Model) Intersects(ray core.Ray, maxDist float64) intersections.HitDetails {
+func (model *Model) Intersects(ray core.Ray, maxDist float64) (hit intersections.HitType, dist float64) {
 	/*for _, tri := range model.Triangles {
 		hit, dist := intersections.IntersectRayTriangle(ray, tri.Vertices[0], tri.Vertices[1], tri.Vertices[2], maxDist)
 		if hit {
 			return core.HIT, dist
 		}
 	}*/
-	return intersections.NewMiss()
+	return intersections.MISS, 0
 }
 
 /*func (model *Model) Normal(v core.Vec3) core.Vec3 {
